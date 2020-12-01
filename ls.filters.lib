@@ -1,0 +1,35 @@
+import("stdfaust.lib");
+lsf = library("ls.filters.lib");
+
+//------------------------------------------------------------------ LOWPASS ---
+lowpass(cf, x) = y
+    // definizione letrec
+    letrec {
+        'y = b0 * x - a1 * y;
+            }
+        // cosa contiene il letrec
+        with {
+            b0 = 1 + a1;
+            a1 = exp(-w(cf)) * -1;
+            w(f) = 2 * ma.PI * f / ma.SR;
+            };
+
+//----------------------------------------------------------------- ONE ZERO ---
+/*
+_ è il segnale in ingresso, (_ rappresentazione segnale)
+viene a seguito diviso in due percorsi paralleli <:
+uno in ritardo di un campione _' (' segna il ritardo di un sample)
+e uno senza ritardo , _ (, segna il passaggio al secondo percorso)
+vengono poi risommati in un segnale unico :> _ ;
+
+il segnale in ritardo di un campione
+ha un controllo di ampiezza * feedforward
+
+c'è un controllo di ampiezza generale * outgain
+sulla funzione in uscita onezeroout
+*/
+onezerofilter(feedforward, outgain) = onezeroout
+with{
+   onezerofunction = _ <: ( _' * feedforward ), _ :> _ ;
+   onezeroout = onezerofunction * outgain;
+};
